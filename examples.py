@@ -3,7 +3,7 @@ from dieopt import get_solution, show_solution
 # Show all three solutions for comparison
 show_solution(
     wafer_diameter=50.8,
-    edge_exclusion=1.0,
+    edge_exclusion=2.0,
     width=1.0,
     height=1.0,
     scribe=7.0,
