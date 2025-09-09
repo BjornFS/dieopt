@@ -9,7 +9,7 @@
 - **Three fixed-offset strategies:** Center, half-offset, and full-offset placement modes.
 - **Optimal DPW calculation:** Quickly compute the best die arrangement for given wafer and die dimensions.
 - **Visualization:** Easily plot wafer layouts and compare placement strategies.
-- **Simple API:** Functional interface for both quick calculations and detailed analysis.
+- **Simple API:** Functional interface for both quick overviews, and GDS-II files.
 
 ---
 
