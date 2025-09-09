@@ -43,7 +43,7 @@ coords = get_solution(
     width=2.0,
     height=2.0,
     scribe=7.0,
-    solution="optimal"
+    solution="optimal" # or "center", "half_offset", "full_offset"
 )
 print(coords)
 
