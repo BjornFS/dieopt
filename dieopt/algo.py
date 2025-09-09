@@ -67,4 +67,12 @@ def optimise_three_fixed_offsets(wafer: Wafer, die: Die) -> ThreeRunSummary:
     r3 = _count_with_offset_no_rotation(wafer, die, 0.5 * px, 0.5 * py)
 
     best = max([r1, r2, r3], key=lambda r: r.dpw)
-    return ThreeRunSummary(best=best, per_iter={"iter1": r1, "iter2": r2, "iter3": r3}, note_iter2=note2)
+    return ThreeRunSummary(
+        best=best,
+        per_iter={
+            "center": r1,
+            "half_offset": r2,
+            "full_offset": r3,
+        },
+        note_iter2=note2
+    )

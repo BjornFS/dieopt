@@ -65,7 +65,18 @@ class PlacementResult:
 
 @dataclass
 class ThreeRunSummary:
-    """Summary of the three fixed-offset evaluations."""
     best: PlacementResult
-    per_iter: dict  # keys: "iter1", "iter2", "iter3"
-    note_iter2: str  # "x" or "y"
+    per_iter: dict  # keys: "center", "half_offset", "full_offset"
+    note_iter2: str
+
+    @property
+    def center(self):
+        return self.per_iter["center"]
+
+    @property
+    def half_offset(self):
+        return self.per_iter["half_offset"]
+
+    @property
+    def full_offset(self):
+        return self.per_iter["full_offset"]

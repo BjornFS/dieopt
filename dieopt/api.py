@@ -1,16 +1,18 @@
 from __future__ import annotations
 from typing import Iterable, List, Tuple, Literal, Optional, Dict, Union
 import numpy as np
+import matplotlib.pyplot as plt  # Add at the top if not already imported
 
 from .models import Wafer, Die, PlacementResult, ThreeRunSummary, DieOptError
 from .algo import optimise_three_fixed_offsets
 
 # We import draw_wafer lazily to avoid forcing matplotlib on users who don't draw.
 def _maybe_draw_wafer(diameter: float, edge_exclusion_mm: float, ax):
-    from draw_wafer import draw_wafer  # your existing function
+    from .draw_wafer import draw_wafer  # ← relative import inside the package
     draw_wafer(diameter=diameter, edge_exclusion_mm=edge_exclusion_mm, ax=ax)
 
-Mode = Literal["best", "iter1", "iter2", "iter3", "all"]
+
+Mode = Literal["center", "half_offset", "full_offset", "best", "all"]
 
 def _coerce_wafer(wafer: Optional[Wafer], wafer_diameter: Optional[float], edge_exclusion: Optional[float]) -> Wafer:
     if wafer is not None:
@@ -56,7 +58,7 @@ def dieopt(
         Wafer diameter and edge exclusion (mm).
     width, height, scribe :
         Die width/height and scribe street (mm).
-    mode : {"best","iter1","iter2","iter3","all"}
+    mode : {"center", "half_offset", "full_offset", "best", "all"}
         Which result(s) to return.
     draw : bool
         If True, calls user's draw_wafer(...) on the provided `ax`.
@@ -68,8 +70,8 @@ def dieopt(
     Returns
     -------
     coords or mapping
-        For modes "best"/"iterN": List[(x, y)] in wafer-centred mm.
-        For mode "all": {"iter1": [...], "iter2": [...], "iter3": [...]}
+        For modes "best"/"center"/"half_offset"/"full_offset": List[(x, y)] in wafer-centred mm.
+        For mode "all": "center", "half_offset", "full_offset"
     (coords, summary) if return_summary=True
     """
     w = _coerce_wafer(wafer, wafer_diameter, edge_exclusion)
@@ -86,26 +88,108 @@ def dieopt(
         pts = _positions_to_tuples(res.positions)
         if draw and pts:
             import numpy as np
+            from matplotlib.patches import Rectangle
             arr = np.asarray(pts, dtype=float)
-            ax.scatter(arr[:, 0], arr[:, 1], s=10)
+            # Draw each die as a rectangle
+            for (x, y) in arr:
+                # Rectangle is centered at (x, y)
+                rect = Rectangle(
+                    (x - d.width / 2, y - d.height / 2),  # bottom left corner
+                    d.width,
+                    d.height,
+                    edgecolor='blue',
+                    facecolor='none',
+                    linewidth=0.5
+                )
+                ax.add_patch(rect)
         return pts
 
-    if mode == "best":
-        out = _to_coords(summary.best)
-    elif mode in ("iter1", "iter2", "iter3"):
-        out = _to_coords(summary.per_iter[mode])
-    elif mode == "all":
-        out = {k: _to_coords(v) for k, v in summary.per_iter.items()}
+    # When returning results for mode "all":
+    if mode == "all":
+        return {
+            "center": _to_coords(summary.center),
+            "half_offset": _to_coords(summary.half_offset),
+            "full_offset": _to_coords(summary.full_offset),
+        }
+    # For single modes:
+    if mode == "center":
+        return _to_coords(summary.center)
+    elif mode == "half_offset":
+        return _to_coords(summary.half_offset)
+    elif mode == "full_offset":
+        return _to_coords(summary.full_offset)
+    elif mode == "best":
+        return _to_coords(summary.best)
     else:
         raise DieOptError(f"Unknown mode: {mode!r}")
 
-    return (out, summary) if return_summary else out
+def show_solution(
+    *,
+    wafer_diameter: float,
+    edge_exclusion: float,
+    width: float,
+    height: float,
+    scribe: float,
+    solution: Literal["center", "half_offset", "full_offset", "comparison", "optimal"] = "center",
+    ax=None,
+):
+    mode = solution if solution != "comparison" else "all"
 
-class DieOpt:
-    """Optional stateful wrapper if users prefer an object interface."""
-    def __init__(self, wafer: Wafer, die: Die) -> None:
-        self.wafer = wafer
-        self.die = die
+    if solution == "comparison":
+        import matplotlib.pyplot as plt
+        fig, axes = plt.subplots(1, 3, figsize=(12, 4), constrained_layout=True)
+        modes = ["center", "half_offset", "full_offset"]
+        results = {}
+        for ax_, m in zip(axes, modes):
+            pts = dieopt(
+                wafer_diameter=wafer_diameter,
+                edge_exclusion=edge_exclusion,
+                width=width,
+                height=height,
+                scribe=scribe,
+                mode=m,
+                draw=True,
+                ax=ax_,
+            )
+            ax_.set_title(f"{m}  DPW={len(pts)}")
+            ax_.set_aspect("equal", adjustable="box")
+            results[m] = pts
+        plt.show()
+        return results
+    else:
+        if ax is None:
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots()
+        pts = dieopt(
+            wafer_diameter=wafer_diameter,
+            edge_exclusion=edge_exclusion,
+            width=width,
+            height=height,
+            scribe=scribe,
+            mode=mode if solution != "optimal" else "best",
+            draw=True,
+            ax=ax,
+        )
+        import matplotlib.pyplot as plt
+        plt.show()
+        return pts
 
-    def run(self, *, mode: Mode = "best", draw: bool = False, ax=None, return_summary: bool = False):
-        return dieopt(wafer=self.wafer, die=self.die, mode=mode, draw=draw, ax=ax, return_summary=return_summary)
+def get_solution(
+    *,
+    wafer_diameter: float,
+    edge_exclusion: float,
+    width: float,
+    height: float,
+    scribe: float,
+    solution: Literal["center", "half_offset", "full_offset", "optimal"] = "center",
+) -> list[tuple[float, float]]:
+    mode = solution if solution != "optimal" else "best"
+    return dieopt(
+        wafer_diameter=wafer_diameter,
+        edge_exclusion=edge_exclusion,
+        width=width,
+        height=height,
+        scribe=scribe,
+        mode=mode,
+        draw=False,
+    )
