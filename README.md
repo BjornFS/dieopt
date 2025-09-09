@@ -50,6 +50,8 @@ print(coords)
 >>> [(-9.0, -18.0), (0.0, -18.0), (9.0, -18.0), (-18.0, -9.0), (-9.0, -9.0), (0.0, -9.0), (9.0, -9.0), (18.0, -9.0), (-18.0, 0.0), (-9.0, 0.0), (0.0, 0.0), (9.0, 0.0), (18.0, 0.0), (-18.0, 9.0), (-9.0, 9.0), (0.0, 9.0), (9.0, 9.0), (18.0, 9.0), (-9.0, 18.0), (0.0, 18.0), (9.0, 18.0)]
 ```
 
+![Wafer Layout Example](example_output.png)
+
 ---
 
 ## API Reference
@@ -94,22 +96,9 @@ Shows a matplotlib plot of the wafer and die placements.
 
 ---
 
-## Example Output
-
-<!-- Add an example image here if available -->
-<!-- ![Wafer Layout Example](docs/example-wafer.png) -->
-
----
-
 ## License
 
-MIT License
-
----
-
-## Contributing
-
-Pull requests and suggestions are welcome! Please open an issue for bugs or feature requests.
+Mozilla License
 
 ---
 
@@ -122,8 +111,4 @@ Pull requests and suggestions are welcome! Please open an issue for bugs or feat
 ## Acknowledgements
 
 Adapted from my Masters Thesis: "Site controlled epitaxy of quantum dots for nano- and 
-quantum photonic applications in telecom wavelength range"
-
----
-
-**dieopt** — Optimal die placement, made simple.
+quantum photonic applications in telecom wavelength range".
